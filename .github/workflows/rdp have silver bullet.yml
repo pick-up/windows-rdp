@@ -1,0 +1,35 @@
+name: CI
+
+on: workflow_dispatch
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - name: Download Ngrok
+      run: Invoke-WebRequest https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-windows-amd64.zip -OutFile ngrok.zip
+      name: Download Silver bullet 
+      run: Invoke-WebRequest https://d-jp.dubox.com/file/a03e90d3aa7937ac4fe0da51e32ede3a?bkt=en-2bd419aa17f4904f885386202c9a3c036601f4ed760655c3c839684c75cd4047396062a5fb0e1846&fid=4400758967540-250528-439773940603371&time=1614341883&sign=FDTAXUGERQlBHSKfWa-DCb740ccc5511e5e8fedcff06b081203-DxL50Gl3lHTu2aHAE4XvWxspMnE%3D&to=138&size=242517916&sta_dx=242517916&sta_cs=0&sta_ft=zip&sta_ct=0&sta_mt=0&fm2=MH%2CJapan%2CAnywhere%2C%2CNone%2Cany&ctime=1614341878&mtime=1614341878&resv0=-1&resv1=0&resv2=rlim&resv3=5&resv4=242517916&vuk=4400758967540&iv=2&htype=&randtype=&newver=1&newfm=1&secfm=1&flow_ver=3&pkey=en-32eae62838ebf4b9c86781087502baac947dfa9c597b5cca542f866421a906ee439f62e8c83a714c&expires=1h&rt=pr&r=787255783&vbdid=-&fin=SilverBullet.v1.1.0+%281%29.zip&fn=SilverBullet.v1.1.0+%281%29.zip&rtype=1&dp-logid=1318416003195242310&dp-callid=0.1&hps=1&tsl=0&csl=0&fsl=-1&csign=3L%2FM0RXigtq23ouhBoDbbi2Rx5c%3D&so=0&ut=1&uter=4&serv=0&uc=3417313820&ti=8a0bc8ca1d2ac36106fbf7767d42aa150acb39ab7dd52a2d305a5e1275657320&adg=&reqlabel=250528_f_9359... -OutFile sv.zip
+      name: download config
+      run: Invoke-WebRequest https://raw.githubusercontent.com/kietkiet1/rdp-tool-/main/Telegram%20Desktop.zip -OutFile config.zip
+    - name: Extract Ngrok Archive
+      run: Expand-Archive ngrok.zip
+   -  name: Extract Silver bullet Archive
+      run: Expand-Archive sv.zip
+    - name: Extract config Archive
+      run: Expand-Archive config.rar
+    - name: Auth
+      run: .\ngrok\ngrok.exe authtoken $Env:NGROK_AUTH_TOKEN
+      env:
+        NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+    - name: Enable TS
+      run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 0
+    - run: Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+    - run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
+    - run: Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "Area69Lab" -Force)
+    - name: Create Tunnel
+      run: .\ngrok\ngrok.exe tcp 3389
+      
+    
